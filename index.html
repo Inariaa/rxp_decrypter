@@ -629,14 +629,8 @@ function rc4(data, key) {
   return out;
 }
 
-// WoW's Lua string.lower folds only ASCII A-Z and leaves bytes >= 0x80 as-is.
-// Mirror that (not JS's Unicode-aware .toLowerCase()) so non-ASCII BattleTags derive the same key.
-function asciiLower(s) {
-  return s.replace(/[A-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + 32));
-}
-
 function deriveKey(baseStr) {
-  const raw = new TextEncoder().encode(asciiLower(baseStr));
+  const raw = new TextEncoder().encode(baseStr.toLowerCase());
   // Take last 16 bytes, right-justified with nulls (nulls go on the LEFT)
   let buf = new Uint8Array(16);
   const len = Math.min(raw.length, 16);
@@ -695,8 +689,8 @@ async function fetchGuide(locale, forceRefresh = false) {
 }
 
 function parseEncrypted(data, originalTag) {
-  // Format: <count>|<check_value>:<base64>%|<trailing>
-  const m = data.match(/^(\d+)\|(\d+):([A-Za-z0-9+/=]+)%/);
+  // Guide files may use either ':' or '::' before the base64 payload.
+  const m = data.match(/^(\d+)\|(\d+):{1,2}([A-Za-z0-9+/=]+)%/);
   if (!m) throw new Error("Invalid guide format (no match)");
   
   const b64Payload = m[3];
