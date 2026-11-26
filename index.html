@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RXP Decryption Tool</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --surface: #313244;
+    --overlay: #45475a;
+    --text: #cdd6f4;
+    --subtext: #a6adc8;
+    --accent: #89b4fa;
+    --accent-hover: #74a0f5;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --yellow: #f9e2af;
+    --muted: #6c7086;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(137,180,250,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), #b4befe, var(--accent));
+    opacity: 0.7;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .logo h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), #b4befe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 6px;
+  }
+
+  .field-group {
+    margin-bottom: 18px;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--subtext);
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  input[type="text"], select {
+    background: var(--bg);
+    border: 1px solid var(--overlay);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(137,180,250,0.15);
+  }
+
+  input[type="text"]::placeholder {
+    color: var(--muted);
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a6adc8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #7aa2f8);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(137,180,250,0.3);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 10px;
+    background: var(--overlay);
+    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+  }
+
+  .btn-secondary:hover {
+    background: #565a72;
+  }
+
+  .result-area {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-area textarea {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--overlay);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.75rem;
+    font-family: 'Consolas', monospace;
+    resize: vertical;
+    margin-bottom: 10px;
+  }
+
+  .result-area textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .stats-card {
+    background: var(--bg);
+    border: 1px solid var(--overlay);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-size: 0.82rem;
+    line-height: 1.7;
+  }
+
+  .stats-card .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .stats-card .stat-label {
+    color: var(--muted);
+  }
+
+  .stats-card .stat-value {
+    color: var(--text);
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* Dev Panel */
+  .dev-panel {
+    display: none;
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--bg);
+    border: 1px solid var(--overlay);
+    border-radius: 12px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .dev-panel h3 {
+    font-size: 0.9rem;
+    color: var(--yellow);
+    margin-bottom: 16px;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--overlay);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(137,180,250,0.05);
+  }
+
+  .drop-zone.has-file {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .dev-files {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .dev-file-slot {
+    flex: 1;
+  }
+
+  .dev-file-slot label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--subtext);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 14px;
+    min-height: 1.2em;
+    transition: color 0.3s;
+  }
+
+  .status.success { color: var(--green); }
+  .status.error { color: var(--red); }
+  .status.info { color: var(--accent); }
+
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .history-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .btn-history {
+    background: var(--overlay);
+    border: none;
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-history:hover { background: #565a72; }
+
+  .history-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--overlay);
+    border-radius: 8px;
+    margin-top: 4px;
+    z-index: 10;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .history-list.open { display: block; }
+
+  .history-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s;
+  }
+
+  .history-item:hover { background: var(--overlay); }
+  .history-item:first-child { border-radius: 8px 8px 0 0; }
+  .history-item:last-child { border-radius: 0 0 8px 8px; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--overlay);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--green);
+    color: var(--bg);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 100;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* Landing section */
+  .landing {
+    width: 100%;
+    background: var(--bg);
+    padding: 60px 24px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .landing-inner {
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .landing-badge {
+    font-size: 0.8rem;
+    color: var(--green);
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+  }
+
+  .landing-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .landing-desc {
+    font-size: 0.95rem;
+    color: var(--subtext);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .landing-card {
+    background: var(--surface);
+    border: 1px solid var(--overlay);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .card-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .card-list {
+    list-style: none;
+    padding: 0;
+    color: var(--subtext);
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+
+  .card-list li { margin-bottom: 6px; padding-left: 16px; position: relative; }
+  .card-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
+  .card-list strong { color: var(--text); }
+
+  .landing-cta {
+    display: inline-block;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--accent), #7aa2f8);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+
+  .landing-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(137,180,250,0.3);
+  }
+
+  .howto {
+    max-width: 480px;
+    margin: 24px auto 0;
+    background: var(--surface);
+    border: 1px solid var(--overlay);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+
+  .howto h3 {
+    font-size: 0.9rem;
+    color: var(--green);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .howto ol {
+    padding-left: 18px;
+    color: var(--subtext);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .howto strong { color: var(--text); }
+
+  .sound-toggle {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+
+  .sound-toggle:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="landing" id="landing">
+  <div class="landing-inner">
+    <div class="landing-badge">RXPFree /</div>
+    <h1 class="landing-title">Skip the paywall.<br>Forever Guides, free.</h1>
+    <div class="landing-card">
+      <div class="card-header">🔒 Private by design</div>
+      <ul class="card-list">
+        <li><strong>Your tag stays on your machine.</strong> No server ever sees it.</li>
+        <li><strong>No cookies, no analytics.</strong> This page talks to nothing but GitHub's raw file host.</li>
+        <li><strong>Takes 5 seconds.</strong> Paste the result into WoW and you're done.</li>
+      </ul>
+    </div>
+    <button class="landing-cta" onclick="scrollToTool()">Get your guide ↓</button>
+  </div>
+</div>
+
+<div class="container" id="toolSection">
+  <div class="logo">
+    <h1>Generate Your Guide</h1>
+    <p>Paste into RXPGuides to unlock</p>
+  </div>
+
+  <div class="field-group">
+    <label>Your BattleTag</label>
+    <div class="input-row">
+      <input type="text" id="battletag" placeholder="Name#1234" autocomplete="off" spellcheck="false">
+      <div class="history-dropdown">
+        <button class="btn-history" onclick="toggleHistory()">🕐</button>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Language</label>
+    <select id="language" onchange="updateFooter()">
+      <option value="en">English</option>
+      <option value="de">German (Deutsch)</option>
+    </select>
+  </div>
+
+  <button class="btn-primary" id="mainBtn" onclick="generateGuide()">Generate Guide</button>
+  <button class="btn-secondary" onclick="checkUpdate()">Check for Updates</button>
+
+  <div class="result-area" id="resultArea" style="display:none;">
+    <div class="stats-card" id="statsCard"></div>
+    <textarea id="guideOutput" readonly rows="4"></textarea>
+  </div>
+
+  <div class="status" id="status">Enter your BattleTag and click Generate</div>
+
+  <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle sound">🔊</button>
+
+  <div class="footer" id="footerInfo" onclick="footerClick()">v1.0 | made by slcker</div>
+
+  <!-- Hidden Dev Panel -->
+  <div class="dev-panel" id="devPanel">
+    <h3>⚙️ Owner Panel</h3>
+    
+    <div class="field-group">
+      <label>GitHub Token (fine-grained PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxx... or github_pat_...">
+    </div>
+
+    <div class="dev-files">
+      <div class="dev-file-slot">
+        <label>English (guide.txt)</label>
+        <div class="drop-zone" id="dropZoneEN">
+          <span>Drop EN guide or click</span>
+          <input type="file" id="devFileEN" accept=".txt" hidden>
+        </div>
+      </div>
+      <div class="dev-file-slot">
+        <label>German (guide_de.txt)</label>
+        <div class="drop-zone" id="dropZoneDE">
+          <span>Drop DE guide or click</span>
+          <input type="file" id="devFileDE" accept=".txt" hidden>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="pushGuides()">Push to Repo</button>
+    <div class="status" id="devStatus"></div>
+  </div>
+
+  <div class="howto">
+    <h3>How to use</h3>
+    <ol>
+      <li><strong>Copy</strong> your guide string from above</li>
+      <li>In WoW → RXPGuides menu → <strong>Import guide</strong></li>
+      <li>Paste (Ctrl+V) → click <strong>Import</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === CONFIG ===
+const _cfg = [95, 86, 95, 86, 20, 1, 0, 1, 0];
+const ORIGINAL_TAG = _cfg.map(v => String.fromCharCode(v ^ 0x37)).join('');
+const GUIDE_COUNT = 1;
+const REPO_OWNER = "Inariaa";
+const REPO_NAME = "rxp_decrypter";
+const BRANCH = "main";
+
+// Embedded fallback (base64 of zlib-compressed guide text) — set by BuildTool or left empty for web-only
+let EMBEDDED_EN_B64 = "";
+let EMBEDDED_DE_B64 = "";
+
+// === RC4 Implementation ===
+function rc4(data, key) {
+  const S = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) S[i] = i;
+  let j = 0;
+  for (let i = 0; i < 256; i++) {
+    j = (j + S[i] + key[i & 0xF]) & 0xFF;
+    [S[i], S[j]] = [S[j], S[i]];
+  }
+  const out = new Uint8Array(data.length);
+  let i = 0, k = 0;
+  for (let n = 0; n < data.length; n++) {
+    i = (i + 1) & 0xFF;
+    k = (k + S[i]) & 0xFF;
+    [S[i], S[k]] = [S[k], S[i]];
+    out[n] = data[n] ^ S[(S[i] + S[k]) & 0xFF];
+  }
+  return out;
+}
+
+function deriveKey(baseStr) {
+  const raw = new TextEncoder().encode(baseStr.toLowerCase());
+  // Take last 16 bytes, right-justified with nulls (nulls go on the LEFT)
+  let buf = new Uint8Array(16);
+  const len = Math.min(raw.length, 16);
+  const offset = 16 - len; // number of leading null bytes
+  for (let i = 0; i < len; i++) {
+    buf[offset + i] = raw[raw.length - len + i];
+  }
+  // XOR mixing loop (in-place, matching Python)
+  for (let i = 0; i < 16; i++) {
+    const idx = ((-i) & 0xF);
+    buf[idx] = buf[(15 - i) & 0xF] ^ buf[(13 - i) & 0xF] ^ buf[(12 - i) & 0xF] ^ buf[(10 - i) & 0xF];
+  }
+  return buf;
+}
+
+// === Base64 helpers (handle large data in chunks to avoid call-stack issues) ===
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function bytesToB64(bytes) {
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+// === Adler-32 checksum ===
+function adler32(data) {
+  let a = 1, b = 0;
+  for (let i = 0; i < data.length; i++) {
+    a = (a + data[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+// === Guide fetching with in-memory cache ===
+let _guideCache = {};
+
+async function fetchGuide(locale, forceRefresh = false) {
+  if (_guideCache[locale] && !forceRefresh) return _guideCache[locale];
+  const fname = locale === 'en' ? 'guide.txt' : `guide_${locale}.txt`;
+  const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${fname}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Guide download failed (HTTP ${resp.status})`);
+  const data = await resp.text();
+  if (!data.includes('|')) throw new Error("Server returned invalid data");
+  _guideCache[locale] = data;
+  return data;
+}
+
+function parseEncrypted(data, originalTag) {
+  // Guide files may use either ':' or '::' before the base64 payload.
+  const m = data.match(/^(\d+)\|(\d+):{1,2}([A-Za-z0-9+/=]+)%/);
+  if (!m) throw new Error("Invalid guide format (no match)");
+  
+  const b64Payload = m[3];
+  const cipherBytes = b64ToBytes(b64Payload);
+  const key = deriveKey(originalTag);
+  const decrypted = rc4(cipherBytes, key);
+  const textBytes = zlibDecompressSync(decrypted);
+  return new TextDecoder().decode(textBytes);
+}
+
+// Synchronous zlib decompress fallback (for when we need it in non-async context)
+function zlibDecompressSync(data) {
+  // Use a synchronous inflate implementation
+  // For the web version, we'll use pako loaded from CDN as a reliable sync option
+  if (typeof pako !== 'undefined') {
+    return new Uint8Array(pako.inflate(data));
+  }
+  throw new Error("pako not loaded");
+}
+
+// Load pako for synchronous inflate/deflate (much more reliable than DecompressionStream for our use case)
+function loadPako() {
+  return new Promise((resolve, reject) => {
+    if (typeof pako !== 'undefined') { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Failed to load pako library"));
+    document.head.appendChild(script);
+  });
+}
+
+// === Main logic ===
+async function getPlainText(locale) {
+  // Try fetching from GitHub (uses cache if already downloaded)
+  try {
+    const data = await fetchGuide(locale);
+    if (data.includes('|') && data.includes(':')) {
+      return parseEncrypted(data, ORIGINAL_TAG);
+    }
+  } catch (e) {
+    console.warn("GitHub fetch failed, trying embedded:", e && e.message ? e.message : String(e));
+  }
+  
+  // Fallback to embedded
+  const b64 = locale === 'en' ? EMBEDDED_EN_B64 : EMBEDDED_DE_B64;
+  if (b64) {
+    try {
+      const bytes = b64ToBytes(b64);
+      return new TextDecoder().decode(new Uint8Array(pako.inflate(bytes)));
+    } catch (e2) {
+      console.warn("Embedded fallback also failed:", e2 && e2.message ? e2.message : String(e2));
+    }
+  }
+  
+  throw new Error("No guide data available. Check your internet connection.");
+}
+
+let _guideGenerated = false;
+
+async function generateGuide() {
+  if (_guideGenerated) {
+    // Second click: copy to clipboard
+    await navigator.clipboard.writeText(document.getElementById('guideOutput').value);
+    setStatus(`Copied! Paste into RXPGuides.`, "success");
+    showToast("Copied to clipboard!");
+    return;
+  }
+
+  const tag = document.getElementById('battletag').value.trim();
+  if (!tag) {
+    setStatus("Please enter your BattleTag first.", "error");
+    return;
+  }
+  if (!/^([^#]+)#(\d+)$/.test(tag)) {
+    setStatus("Invalid format. Use: Name#1234", "error");
+    return;
+  }
+  // Allow Unicode characters in BattleTags (Korean, CJK, etc.)
+
+  const locale = document.getElementById('language').value;
+  
+  try {
+    setStatus("Generating...", "info");
+    await loadPako();
+    
+    const text = await getPlainText(locale);
+    const keyNew = deriveKey(tag);
+    const zlibData = new Uint8Array(pako.deflate(new TextEncoder().encode(text), { level: 6 }));
+    
+    const cipher = rc4(zlibData, keyNew);
+    const b64Out = bytesToB64(cipher);
+    const checkVal = ((zlibData[zlibData.length - 4] << 24) | (zlibData[zlibData.length - 3] << 16) | (zlibData[zlibData.length - 2] << 8) | zlibData[zlibData.length - 1]) >>> 0;
+    
+    const guideCount = (text.match(/^#name/gm) || []).length;
+    const content = `${guideCount}|${checkVal}:${b64Out}%|40000`;
+    saveTagToHistory(tag);
+    playDing();
+    
+    document.getElementById('guideOutput').value = content;
+    
+    // Stats card
+    const sizeMB = (new Blob([content]).size / (1024 * 1024)).toFixed(2);
+    document.getElementById('statsCard').innerHTML = `
+      <div class="stat-row"><span class="stat-label">BattleTag</span><span class="stat-value">${tag}</span></div>
+      <div class="stat-row"><span class="stat-label">Guides</span><span class="stat-value">${guideCount}</span></div>
+      <div class="stat-row"><span class="stat-label">Size</span><span class="stat-value">${sizeMB} MB</span></div>
+    `;
+    
+    document.getElementById('resultArea').style.display = 'block';
+    _guideGenerated = true;
+    const btn = document.getElementById('mainBtn');
+    btn.textContent = "Copy to Clipboard";
+    setStatus(`Generated ${guideCount} guides. Click button again to copy.`, "success");
+  } catch (err) {
+    setStatus(`Error: ${err.message}`, "error");
+  }
+}
+
+// Reset button when tag or language changes
+document.getElementById('battletag').addEventListener('input', () => {
+  _guideGenerated = false;
+  document.getElementById('mainBtn').textContent = 'Generate Guide';
+  document.getElementById('resultArea').style.display = 'none';
+});
+document.getElementById('language').addEventListener('change', () => {
+  _guideGenerated = false;
+  document.getElementById('mainBtn').textContent = 'Generate Guide';
+  document.getElementById('resultArea').style.display = 'none';
+});
+
+async function checkUpdate() {
+  const locale = document.getElementById('language').value;
+  try {
+    setStatus("Checking for updates...", "info");
+    await loadPako();
+    // Save old data to compare
+    const oldData = _guideCache[locale] || null;
+    // Force refresh to bypass cache
+    _guideCache[locale] = null;
+    const data = await fetchGuide(locale, true);
+    if (!data.includes('|') || !data.includes(':')) {
+      setStatus("Invalid response from server.", "error");
+      return;
+    }
+    if (oldData && oldData === data) {
+      setStatus("Already up to date.", "success");
+    } else {
+      setStatus("Updated successfully!", "success");
+    }
+  } catch (err) {
+    setStatus(`Update failed: ${err.message}`, "error");
+  }
+}
+
+// === Tag History (localStorage) ===
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('rxp_tags') || '[]');
+  } catch { return []; }
+}
+
+function saveTagToHistory(tag) {
+  let h = getHistory();
+  h = h.filter(t => t !== tag);
+  h.unshift(tag);
+  h = h.slice(0, 10);
+  localStorage.setItem('rxp_tags', JSON.stringify(h));
+}
+
+function loadLastTag() {
+  const h = getHistory();
+  if (h.length > 0) document.getElementById('battletag').value = h[0];
+}
+
+function toggleHistory() {
+  const list = document.getElementById('historyList');
+  const tags = getHistory();
+  
+  if (list.classList.contains('open')) {
+    list.classList.remove('open');
+    return;
+  }
+  
+  list.innerHTML = '';
+  if (tags.length === 0) {
+    list.innerHTML = '<div class="history-item" style="color:var(--muted)">No history</div>';
+  } else {
+    tags.forEach(tag => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.textContent = tag;
+      div.onclick = () => {
+        document.getElementById('battletag').value = tag;
+        list.classList.remove('open');
+      };
+      list.appendChild(div);
+    });
+  }
+  
+  list.classList.add('open');
+}
+
+// Close history on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.history-dropdown')) {
+    document.getElementById('historyList').classList.remove('open');
+  }
+});
+
+// === UI helpers ===
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (type ? ` ${type}` : '');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function scrollToTool() {
+  document.getElementById('toolSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// === Sound ===
+let soundOn = localStorage.getItem('rxp_sound') !== 'off';
+function toggleSound() {
+  soundOn = !soundOn;
+  localStorage.setItem('rxp_sound', soundOn ? 'on' : 'off');
+  document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
+}
+
+function playDing() {
+  if (!soundOn) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+// === Last Updated (GitHub commit date) ===
+async function fetchLastUpdated(locale) {
+  try {
+    const fname = locale === 'en' ? 'guide.txt' : `guide_${locale}.txt`;
+    const resp = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits?path=${fname}&per_page=1`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.length === 0) return null;
+    return new Date(data[0].commit.committer.date);
+  } catch(e) { return null; }
+}
+
+async function updateFooter() {
+  const locale = document.getElementById('language').value;
+  const date = await fetchLastUpdated(locale);
+  const base = 'v1.0 | made by slcker';
+  if (date) {
+    const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+    const timeOpts = { hour: '2-digit', minute: '2-digit' };
+    document.getElementById('footerInfo').textContent = `${base} | Updated ${date.toLocaleDateString(undefined, opts)}, ${date.toLocaleTimeString(undefined, timeOpts)}`;
+  } else {
+    document.getElementById('footerInfo').textContent = base;
+  }
+}
+
+// === Dev Panel (hidden) ===
+let _footerClicks = 0;
+function footerClick() {
+  _footerClicks++;
+  if (_footerClicks >= 5) {
+    document.getElementById('devPanel').style.display = 'block';
+    // Load saved token
+    const savedToken = localStorage.getItem('rxp_gh_token');
+    if (savedToken) document.getElementById('ghToken').value = savedToken;
+  }
+}
+
+// Drop zone logic
+let _devFileEN = null;
+let _devFileDE = null;
+
+function setupDropZone(zoneId, inputId, setter) {
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  
+  zone.addEventListener('click', () => input.click());
+  input.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) setter(e.target.files[0], zone);
+  });
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) setter(e.dataTransfer.files[0], zone);
+  });
+}
+
+setupDropZone('dropZoneEN', 'devFileEN', (file, zone) => {
+  _devFileEN = file;
+  zone.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  zone.classList.add('has-file');
+});
+
+setupDropZone('dropZoneDE', 'devFileDE', (file, zone) => {
+  _devFileDE = file;
+  zone.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  zone.classList.add('has-file');
+});
+
+async function pushGuides() {
+  const token = document.getElementById('ghToken').value.trim();
+  
+  if (!token) { setDevStatus("Enter your GitHub token first.", "error"); return; }
+  if (!_devFileEN && !_devFileDE) { setDevStatus("Drop at least one guide file.", "error"); return; }
+  
+  localStorage.setItem('rxp_gh_token', token);
+  const results = [];
+  
+  try {
+    // Push EN
+    if (_devFileEN) {
+      setDevStatus("Pushing English guide...", "info");
+      await pushSingleFile(token, 'guide.txt', _devFileEN);
+      results.push('guide.txt');
+    }
+    
+    // Push DE
+    if (_devFileDE) {
+      setDevStatus("Pushing German guide...", "info");
+      await pushSingleFile(token, `guide_de.txt`, _devFileDE);
+      results.push('guide_de.txt');
+    }
+    
+    setDevStatus(`✅ Pushed: ${results.join(', ')} — done!`, "success");
+    showToast("Guide(s) pushed to repo!");
+  } catch (err) {
+    setDevStatus(`Error: ${err.message}`, "error");
+  }
+}
+
+async function pushSingleFile(token, fname, file) {
+  // Read raw bytes to preserve exact content (no text decoding/re-encoding)
+  const buf = new Uint8Array(await file.arrayBuffer());
+  
+  let sha = '';
+  const metaResp = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${fname}?ref=${BRANCH}`,
+    { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (metaResp.ok) {
+    const meta = await metaResp.json();
+    sha = meta.sha;
+  }
+  
+  const b64Content = bytesToB64(buf);
+  const resp = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${fname}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Update ${fname} (${new Date().toISOString()})`,
+        content: b64Content,
+        ...(sha ? { sha } : {})
+      })
+    }
+  );
+  
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(`${fname}: ${err.message || 'HTTP ' + resp.status}`);
+  }
+}
+
+function setDevStatus(msg, type) {
+  const el = document.getElementById('devStatus');
+  el.textContent = msg;
+  el.className = 'status' + (type ? ` ${type}` : '');
+}
+
+// === Init ===
+loadLastTag();
+document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
+
+// Pre-fetch both guides on page load (silent)
+(async () => {
+  try {
+    await loadPako();
+    await Promise.allSettled([
+      fetchGuide('en'),
+      fetchGuide('de')
+    ]);
+    setStatus("Ready. Enter your BattleTag and click Generate.", "info");
+  } catch (e) {
+    console.warn("Auto-fetch on load failed:", e.message);
+    setStatus(`Load issue: ${e.message} — try \"Check for Updates\"`, "error");
+  }
+  updateFooter();
+})();
+</script>
+</body>
+</html>
