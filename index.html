@@ -552,7 +552,7 @@
 
   <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle sound">🔊</button>
 
-  <div class="footer" id="footerInfo">v1.0 | made by slcker</div>
+  <div class="footer" id="footerInfo"><v1.1 | made by slcker</div>
 
 
 
@@ -933,7 +933,7 @@ async function fetchLastUpdated(locale) {
 async function updateFooter() {
   const locale = document.getElementById('language').value;
   const date = await fetchLastUpdated(locale);
-  const base = 'v1.0 | made by slcker';
+  const base = 'v1.1 | made by slcker';
   if (date) {
     const opts = { year: 'numeric', month: 'short', day: 'numeric' };
     const timeOpts = { hour: '2-digit', minute: '2-digit' };
