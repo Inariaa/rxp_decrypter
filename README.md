@@ -14,9 +14,9 @@ Free web tool to generate Rested XP guide strings for any BattleTag.
 
 | File | Purpose |
 |------|---------|
-| `index.html` | The web tool (GitHub Pages) |
-| `guide.txt` | English guide (encrypted, fake tag) |
-| `guide_de.txt` | German guide (encrypted, fake tag) |
+| `index.html` | The web tool (GitHub Page) |
+| `guide.txt` | English guide  |
+| `guide_de.txt` | German guide  |
 
 ## Updating guides
 
