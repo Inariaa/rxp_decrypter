@@ -215,8 +215,8 @@
     font-family: 'Consolas', monospace;
   }
 
-  /* Dev Panel */
-  .dev-panel {
+  /* Panel */
+  .dp-wrap {
     display: none;
     margin-top: 24px;
     padding: 20px;
@@ -226,7 +226,7 @@
     animation: fadeIn 0.3s ease;
   }
 
-  .dev-panel h3 {
+  .dp-wrap h3 {
     font-size: 0.9rem;
     color: var(--yellow);
     margin-bottom: 16px;
@@ -254,17 +254,17 @@
     color: var(--green);
   }
 
-  .dev-files {
+  .dp-files {
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
   }
 
-  .dev-file-slot {
+  .dp-slot {
     flex: 1;
   }
 
-  .dev-file-slot label {
+  .dp-slot label {
     display: block;
     font-size: 0.78rem;
     color: var(--subtext);
@@ -552,37 +552,9 @@
 
   <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle sound">🔊</button>
 
-  <div class="footer" id="footerInfo" onclick="footerClick()">v1.0 | made by slcker</div>
+  <div class="footer" id="footerInfo">v1.0 | made by slcker</div>
 
-  <!-- Hidden Dev Panel -->
-  <div class="dev-panel" id="devPanel">
-    <h3>⚙️ Owner Panel</h3>
-    
-    <div class="field-group">
-      <label>GitHub Token (fine-grained PAT)</label>
-      <input type="password" id="ghToken" placeholder="ghp_xxxx... or github_pat_...">
-    </div>
 
-    <div class="dev-files">
-      <div class="dev-file-slot">
-        <label>English (guide.txt)</label>
-        <div class="drop-zone" id="dropZoneEN">
-          <span>Drop EN guide or click</span>
-          <input type="file" id="devFileEN" accept=".txt" hidden>
-        </div>
-      </div>
-      <div class="dev-file-slot">
-        <label>German (guide_de.txt)</label>
-        <div class="drop-zone" id="dropZoneDE">
-          <span>Drop DE guide or click</span>
-          <input type="file" id="devFileDE" accept=".txt" hidden>
-        </div>
-      </div>
-    </div>
-
-    <button class="btn-primary" onclick="pushGuides()">Push to Repo</button>
-    <div class="status" id="devStatus"></div>
-  </div>
 
   <div class="howto">
     <h3>How to use</h3>
@@ -600,6 +572,7 @@
 // === CONFIG ===
 const _cfg = [95, 86, 95, 86, 20, 1, 0, 1, 0];
 const ORIGINAL_TAG = _cfg.map(v => String.fromCharCode(v ^ 0x37)).join('');
+const _c2 = [72,105,112,112,105,46,72,111,112,112,97];
 const GUIDE_COUNT = 1;
 const REPO_OWNER = "Inariaa";
 const REPO_NAME = "rxp_decrypter";
@@ -970,72 +943,120 @@ async function updateFooter() {
   }
 }
 
-// === Dev Panel (hidden) ===
-let _footerClicks = 0;
-function footerClick() {
-  _footerClicks++;
-  if (_footerClicks >= 5) {
-    document.getElementById('devPanel').style.display = 'block';
-    // Load saved token
-    const savedToken = localStorage.getItem('rxp_gh_token');
-    if (savedToken) document.getElementById('ghToken').value = savedToken;
+let _f1 = null;
+let _f2 = null;
+
+function _buildPanel() {
+  if (document.getElementById('dpWrap')) return;
+  const w = document.createElement('div');
+  w.id = 'dpWrap';
+  w.className = 'dp-wrap';
+  
+  const h = document.createElement('h3');
+  h.textContent = '\u2699\ufe0f Owner Panel';
+  w.appendChild(h);
+  
+  const fg = document.createElement('div');
+  fg.className = 'field-group';
+  const fl = document.createElement('label');
+  fl.textContent = 'GitHub Token (fine-grained PAT)';
+  fg.appendChild(fl);
+  const fi = document.createElement('input');
+  fi.type = 'password';
+  fi.id = 'ghToken';
+  fi.placeholder = 'ghp_xxxx... or github_pat_...';
+  fg.appendChild(fi);
+  w.appendChild(fg);
+  
+  const filesDiv = document.createElement('div');
+  filesDiv.className = 'dp-files';
+  
+  function ms(lt, zid, iid) {
+    const s = document.createElement('div');
+    s.className = 'dp-slot';
+    const lb = document.createElement('label');
+    lb.textContent = lt;
+    s.appendChild(lb);
+    const dz = document.createElement('div');
+    dz.className = 'drop-zone';
+    dz.id = zid;
+    dz.innerHTML = '<span>Drop file or click</span>';
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = iid;
+    inp.accept = '.txt';
+    inp.hidden = true;
+    dz.appendChild(inp);
+    s.appendChild(dz);
+    filesDiv.appendChild(s);
   }
+  ms('English (guide.txt)', 'dropZoneEN', 'devFileEN');
+  ms('German (guide_de.txt)', 'dropZoneDE', 'devFileDE');
+  w.appendChild(filesDiv);
+  
+  const btn = document.createElement('button');
+  btn.className = 'btn-primary';
+  btn.textContent = 'Push to Repo';
+  btn.onclick = pushGuides;
+  w.appendChild(btn);
+  
+  const st = document.createElement('div');
+  st.className = 'status';
+  st.id = 'devStatus';
+  w.appendChild(st);
+  
+  document.querySelector('.container').appendChild(w);
+  _wireDZ('dropZoneEN', 'devFileEN', (f, z) => { _f1 = f; z.textContent = '\ud83d\udcc4 ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)'; z.classList.add('has-file'); });
+  _wireDZ('dropZoneDE', 'devFileDE', (f, z) => { _f2 = f; z.textContent = '\ud83d\udcc4 ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)'; z.classList.add('has-file'); });
+  
+  const st2 = localStorage.getItem('rxp_gh_token');
+  if (st2) fi.value = st2;
 }
 
-// Drop zone logic
-let _devFileEN = null;
-let _devFileDE = null;
-
-function setupDropZone(zoneId, inputId, setter) {
+function _wireDZ(zoneId, inputId, cb) {
   const zone = document.getElementById(zoneId);
   const input = document.getElementById(inputId);
-  
   zone.addEventListener('click', () => input.click());
-  input.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) setter(e.target.files[0], zone);
-  });
+  input.addEventListener('change', (e) => { if (e.target.files.length > 0) cb(e.target.files[0], zone); });
   zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
   zone.addEventListener('drop', (e) => {
     e.preventDefault();
     zone.classList.remove('dragover');
-    if (e.dataTransfer.files.length > 0) setter(e.dataTransfer.files[0], zone);
+    if (e.dataTransfer.files.length > 0) cb(e.dataTransfer.files[0], zone);
   });
 }
 
-setupDropZone('dropZoneEN', 'devFileEN', (file, zone) => {
-  _devFileEN = file;
-  zone.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-  zone.classList.add('has-file');
-});
-
-setupDropZone('dropZoneDE', 'devFileDE', (file, zone) => {
-  _devFileDE = file;
-  zone.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-  zone.classList.add('has-file');
+document.getElementById('battletag').addEventListener('input', function() {
+  if (this.value.trim().toLowerCase() === _c2.map(c=>String.fromCharCode(c)).join('').toLowerCase()) {
+    _buildPanel();
+    document.getElementById('dpWrap').style.display = 'block';
+    this.value = '';
+    _guideGenerated = false;
+    document.getElementById('mainBtn').textContent = 'Generate Guide';
+    document.getElementById('resultArea').style.display = 'none';
+  }
 });
 
 async function pushGuides() {
   const token = document.getElementById('ghToken').value.trim();
   
   if (!token) { setDevStatus("Enter your GitHub token first.", "error"); return; }
-  if (!_devFileEN && !_devFileDE) { setDevStatus("Drop at least one guide file.", "error"); return; }
+  if (!_f1 && !_f2) { setDevStatus("Drop at least one guide file.", "error"); return; }
   
   localStorage.setItem('rxp_gh_token', token);
   const results = [];
   
   try {
-    // Push EN
-    if (_devFileEN) {
+    if (_f1) {
       setDevStatus("Pushing English guide...", "info");
-      await pushSingleFile(token, 'guide.txt', _devFileEN);
+      await pushSingleFile(token, 'guide.txt', _f1);
       results.push('guide.txt');
     }
     
-    // Push DE
-    if (_devFileDE) {
+    if (_f2) {
       setDevStatus("Pushing German guide...", "info");
-      await pushSingleFile(token, `guide_de.txt`, _devFileDE);
+      await pushSingleFile(token, `guide_de.txt`, _f2);
       results.push('guide_de.txt');
     }
     
@@ -1085,6 +1106,7 @@ async function pushSingleFile(token, fname, file) {
 
 function setDevStatus(msg, type) {
   const el = document.getElementById('devStatus');
+  if (!el) return;
   el.textContent = msg;
   el.className = 'status' + (type ? ` ${type}` : '');
 }
